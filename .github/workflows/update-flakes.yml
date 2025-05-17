@@ -30,7 +30,7 @@ jobs:
           purge-created: 0
           purge-primary-key: never
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v24
+        uses: DeterminateSystems/update-flake-lock@v25
         with:
           pr-labels: |
             merge-queue
