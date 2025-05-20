@@ -1,11 +1,18 @@
 {
   config,
+  namespace,
   lib,
   pkgs,
   ...
 }:
 let
-  cfg = config.modules.aichat;
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+  cfg = config.${namespace}.aichat;
   yaml = pkgs.formats.yaml { };
   aiChatConfig = {
     stream = false;
@@ -30,17 +37,17 @@ let
   };
 in
 {
-  options.modules.aichat = {
-    enable = lib.mkEnableOption "aichat";
-    model = lib.mkOption {
-      type = lib.types.str;
+  options.${namespace}.aichat = {
+    enable = mkEnableOption "aichat";
+    model = mkOption {
+      type = types.str;
       default = "copilot:claude-3.7-sonnet";
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     home.packages = with pkgs; [
-      unstable.aichat
+      aichat
     ];
     xdg.configFile."aichat/config.yaml" = {
       source = yaml.generate "config.yaml" aiChatConfig;
