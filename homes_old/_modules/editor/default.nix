@@ -1,9 +1,0 @@
-{
-  ...
-}:
-{
-  imports = [
-    ./nvim
-    ./vscode
-  ];
-}

@@ -1,26 +1,23 @@
 {
+  config,
   inputs,
-  lib,
+  namespace,
+  pkgs,
   ...
 }:
 {
-  modules = {
-    deployment.nix.enable = true;
-    editor = {
-      vscode = {
-        enable = false;
-      };
-    };
-    security._1password.enable = true;
-    kubernetes = {
+  ${namespace} = {
+    user = {
       enable = true;
-      inherit (inputs.secrets) kubeconfig;
+      icon = pkgs.${namespace}.trash-panda-icon;
+      inherit (config.snowfallorg.user) name;
     };
-    shell = {
-      atuin.enable = lib.mkForce false;
+    programs = {
+      raycast.enable = true;
     };
-    browsers.firefox.enable = lib.mkForce false;
-    terminals.wezterm.enable = lib.mkForce false;
-    terminals.ghostty.enable = lib.mkForce true;
+    suites.kubernetes = {
+      enable = true;
+      kubeSecretFile = inputs.constansts.kubeconfig;
+    };
   };
 }
