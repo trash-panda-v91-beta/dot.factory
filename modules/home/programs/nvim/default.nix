@@ -11,10 +11,6 @@ let
   nixvim = inputs.codelab.packages.${system}.default.extend {
     inherit (cfg) aiProvider;
   };
-  shellAliases = {
-    vi = "nvim";
-    vim = "nvim";
-  };
 in
 {
   options.${namespace}.programs.nvim = {
@@ -35,18 +31,18 @@ in
   config = lib.mkIf cfg.enable {
     home = {
       packages = [ nixvim ];
+      shellAliases = {
+        vi = lib.getExe nixvim;
+        vim = lib.getExe nixvim;
+      };
       sessionVariables = {
-        EDITOR = lib.mkIf cfg.makeDefaultEditor "nvim";
-        MANPAGER = "nvim -c 'set ft=man bt=nowrite noswapfile nobk shada=\\\"NONE\\\" ro noma' +Man! -o -";
+        EDITOR = lib.mkIf cfg.makeDefaultEditor lib.getExe nixvim;
+        MANPAGER = "${lib.getExe nixvim} -c 'set ft=man bt=nowrite noswapfile nobk shada=\\\"NONE\\\" ro noma' +Man! -o -";
       };
     };
 
     programs = {
-      git.extraConfig.core.editor = lib.mkIf cfg.makeDefaultEditor "nvim";
-      fish.shellAliases = shellAliases;
-      zsh.shellAliases = shellAliases;
-      bash.shellAliases = shellAliases;
-      nushell.shellAliases = shellAliases;
+      git.extraConfig.core.editor = lib.mkIf cfg.makeDefaultEditor lib.getExe nixvim;
     };
   };
 }

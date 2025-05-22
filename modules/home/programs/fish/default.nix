@@ -1,4 +1,5 @@
 {
+  namespace,
   pkgs,
   lib,
   config,
@@ -7,7 +8,7 @@
 let
   inherit (pkgs.stdenv.hostPlatform) isDarwin;
   inherit (config.home) username homeDirectory;
-  cfg = config.modules.shell.fish;
+  cfg = config.${namespace}.programs.fish;
 in
 {
   options.modules.shell.fish = {
@@ -24,42 +25,11 @@ in
             inherit (pkgs.fishPlugins.puffer) src;
           }
         ];
-        shellAbbrs = {
-          cdc = {
-            expansion = "cd ~/repos/corporate/%";
-            setCursor = true;
-          };
-          cdp = {
-            expansion = "cd ~/repos/personal/%";
-            setCursor = true;
-          };
-
-          va = "auto_activate_venv";
-        };
         interactiveShellInit = ''
-          function remove_path
-            if set -l index (contains -i $argv[1] $PATH)
-              set --erase --universal fish_user_paths[$index]
-            end
-          end
-
-          function update_path
-            if test -d $argv[1]
-              fish_add_path -m $argv[1]
-            else
-              remove_path $argv[1]
-            end
-          end
-
-          # Paths are in reverse priority order
-          update_path /opt/homebrew/bin
           update_path /nix/var/nix/profiles/default/bin
           update_path /run/current-system/sw/bin
           update_path /etc/profiles/per-user/${username}/bin
           update_path /run/wrappers/bin
-          update_path ${homeDirectory}/go/bin
-          update_path ${homeDirectory}/.cargo/bin
-          update_path ${homeDirectory}/.local/bin
 
           set fish_greeting # Disable greeting
           fish_vi_key_bindings
@@ -69,11 +39,9 @@ in
           set -gx fish_cursor_insert line blink
           set -gx fish_cursor_visual block
           set -gx fish_cursor_replace_one underscoreeval
-          set -gx PIP_REQUIRE_VIRTUALENV true
-          set -gx PATH $PATH $HOME/.krew/bin
 
           function __auto_auto_activate_venv --on-variable PWD
-            auto_activate_venv
+              auto_activate_venv
           end
         '';
 
@@ -83,22 +51,22 @@ in
               set REPO_ROOT (git rev-parse --show-toplevel 2>/dev/null)
 
               if test -z "$REPO_ROOT"; and test -d "$(pwd)/.venv"
-                if [ "$VIRTUAL_ENV" != "$(pwd)/.venv" ]
-                  source "$(pwd)/.venv/bin/activate.fish" &>/dev/null
-                end
-                return
+                  if [ "$VIRTUAL_ENV" != "$(pwd)/.venv" ]
+                      source "$(pwd)/.venv/bin/activate.fish" &>/dev/null
+                  end
+                  return
               end
 
               if test -z "$REPO_ROOT"; and test -n "$VIRTUAL_ENV"
-                deactivate
+                  deactivate
               end
 
               if [ "$VIRTUAL_ENV" = "$REPO_ROOT/.venv" ]
-                return
+                  return
               end
 
               if [ -d "$REPO_ROOT/.venv" ]
-                source "$REPO_ROOT/.venv/bin/activate.fish" &>/dev/null
+                  source "$REPO_ROOT/.venv/bin/activate.fish" &>/dev/null
               end
             '';
             description = "Auto activate/deactivate python venv";

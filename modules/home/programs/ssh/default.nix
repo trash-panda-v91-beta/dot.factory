@@ -1,9 +1,14 @@
-{ config, lib, ... }:
+{
+  config,
+  namespace,
+  lib,
+  ...
+}:
 let
-  cfg = config.modules.security.ssh;
+  cfg = config.${namespace}.programs.ssh;
 in
 {
-  options.modules.security.ssh = {
+  options.${namespace}.programs.ssh = {
     enable = lib.mkEnableOption "ssh";
   };
 

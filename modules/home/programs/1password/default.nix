@@ -1,52 +1,80 @@
 {
-  inputs,
   pkgs,
   config,
+  namespace,
   lib,
   ...
 }:
 let
-  cfg = config.modules.security._1password;
-  personalGithubPubKeyPath = "${config.home.homeDirectory}/.ssh/personal-github.pub";
+  cfg = config.${namespace}.programs._1password;
 in
 {
-  options.modules.security._1password = {
+  options.${namespace}.programs._1password = {
     enable = lib.mkEnableOption "1password";
-    configureGithubKeys = lib.mkOption {
-      config = lib.mkIf cfg.enable {
-        home.packages = [
-          pkgs._1password-cli
-        ];
+    enableGui = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether to enable the 1Password GUI";
+    };
+    sshHosts = lib.mkOption {
+      type = lib.types.listOf (
+        lib.types.submodule {
+          options = {
+            domain = lib.mkOption {
+              type = lib.types.str;
+              description = "Domain for SSH connection";
+              example = "github.com";
+            };
 
-        home.file.personalGithubPubKey = lib.mkIf cfg.configureGithubKeys {
+            user = lib.mkOption {
+              type = lib.types.str;
+              description = "SSH user";
+              example = "git";
+            };
+
+            identityFile = lib.mkOption {
+              type = lib.types.path;
+              description = "Path to the SSH identity file";
+            };
+
+            identitiesOnly = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = "Whether to only use the specified identity file";
+            };
+          };
+        }
+      );
+      default = [ ];
+      description = "List of SSH hosts to configure with 1Password integration";
+    };
+
+    config = lib.mkIf cfg.enable {
+      programs = {
+        _1password = {
           enable = true;
-          source = inputs.secrets.publicKeys.personalGithub;
-          target = personalGithubPubKeyPath;
+          package = pkgs._1password-cli;
+        };
+        _1password-gui = lib.mkIf cfg.enableGui {
+          enable = true;
+          package = pkgs._1password-gui;
         };
 
-        programs.ssh = lib.mkMerge [
-          {
-          }
-
-          (lib.mkIf cfg.configureGithubKeys {
-            matchBlocks."github.com" = {
-              user = "git";
-              identityFile = personalGithubPubKeyPath;
-              identitiesOnly = true;
-              extraOptions = {
-                identityAgent = "'~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock'";
+        ssh = lib.mkIf (cfg.sshHosts != [ ]) {
+          matchBlocks = builtins.listToAttrs (
+            map (host: {
+              name = host.domain;
+              value = {
+                user = host.user;
+                identityFile = host.identityFile;
+                identitiesOnly = host.identitiesOnly;
+                extraOptions = {
+                  identityAgent = "'~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock'";
+                };
               };
-            };
-            matchBlocks."asc.internal" = {
-              user = "git";
-              identityFile = personalGithubPubKeyPath;
-              identitiesOnly = true;
-              extraOptions = {
-                identityAgent = "'~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock'";
-              };
-            };
-          })
-        ];
+            }) cfg.sshHosts
+          );
+        };
       };
     };
   };

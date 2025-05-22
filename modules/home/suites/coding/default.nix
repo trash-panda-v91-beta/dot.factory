@@ -48,6 +48,8 @@ in
 
       shellAliases =
         {
+          cdc = "cd ~/repos/corporate";
+          cdp = "cd ~/repos/personal";
           lg = "lazygit";
         }
         // lib.optionalAttrs (builtins.elem "python" cfg.languages) {
