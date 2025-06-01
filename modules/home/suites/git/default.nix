@@ -1,11 +1,12 @@
 {
   pkgs,
   config,
+  namespace,
   lib,
   ...
 }:
 let
-  cfg = config.modules.shell.git;
+  cfg = config.${namespace}.suites.git;
   makeCommitMessage = pkgs.writeShellApplication {
     name = "make-commit-message";
     bashOptions = [ ];
@@ -16,14 +17,14 @@ let
       curl
       fzf
       jq
-      unstable.aichat
+      aichat
     ];
     text = builtins.readFile ./make-commit-message.sh;
   };
   inherit (pkgs.stdenv) isDarwin;
 in
 {
-  options.modules.shell.git = {
+  options.${namespace}.suites.git = {
     enable = lib.mkEnableOption "git";
     username = lib.mkOption { type = lib.types.str; };
     email = lib.mkOption { type = lib.types.str; };
@@ -82,15 +83,8 @@ in
             co = "checkout";
           };
           ignores = [
-            # Mac OS X hidden files
             ".DS_Store"
-            # Windows files
             "Thumbs.db"
-            # asdf
-            ".tool-versions"
-            # mise
-            ".mise.toml"
-            # Sops
             ".decrypted~*"
             "*.decrypted.*"
             ".venv"
@@ -134,10 +128,16 @@ in
           };
         };
       };
-      home.packages = [
-        pkgs.git-filter-repo
-        pkgs.tig
-      ];
+      home = {
+        packages = [
+          pkgs.git-filter-repo
+        ];
+        shellAliases = {
+          cdc = "cd ~/repos/corporate";
+          cdp = "cd ~/repos/personal";
+          lg = "lazygit";
+        };
+      };
 
     })
     (lib.mkIf (cfg.enable && isDarwin) {

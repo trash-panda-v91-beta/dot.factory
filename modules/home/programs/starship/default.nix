@@ -1,6 +1,21 @@
-{ pkgs, ... }:
 {
-  config = {
+  config,
+  lib,
+  pkgs,
+  namespace,
+  ...
+}:
+
+with lib;
+let
+  cfg = config.${namespace}.programs.starship;
+in
+{
+  options.${namespace}.programs.starship = {
+    enable = lib.mkEnableOption "starship";
+  };
+
+  config = mkIf cfg.enable {
     programs.starship = {
       enable = true;
       package = pkgs.unstable.starship;

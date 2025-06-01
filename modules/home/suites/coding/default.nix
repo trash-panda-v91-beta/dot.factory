@@ -37,20 +37,18 @@ in
     };
   };
   config = mkIf cfg.enable {
+    ${namespace}.suits.git.enable = true;
     home = {
       packages =
         with pkgs;
         [
-          git
+          go-tasks
           ripgrep
         ]
         ++ (lib.flatten (map (lang: languageTools.${lang}) cfg.languages));
 
       shellAliases =
         {
-          cdc = "cd ~/repos/corporate";
-          cdp = "cd ~/repos/personal";
-          lg = "lazygit";
         }
         // lib.optionalAttrs (builtins.elem "python" cfg.languages) {
           py = "python";
